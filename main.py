@@ -2,13 +2,12 @@ import os
 from flask import Flask, request
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
-from config import BOT_TOKEN
 
-# 1. Khởi tạo Flask App
+# 1. Lấy token trực tiếp từ Environment Variables của Render
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+
+# 2. Khởi tạo Flask App
 flask_app = Flask(__name__)
-
-# 2. Khởi tạo Telegram Bot Application
-bot_app = Application.builder().token(BOT_TOKEN).build()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🚀 Crypto News AI\n\nBot đã hoạt động thành công!")
