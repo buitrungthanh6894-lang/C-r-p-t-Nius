@@ -1,0 +1,1 @@
+web: gunicorn -w 1 "from telegram import Update:flask_app"
