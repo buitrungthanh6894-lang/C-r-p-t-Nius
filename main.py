@@ -3,33 +3,42 @@ from flask import Flask, request
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# 1. Lấy token trực tiếp từ Environment Variables của Render
+# Lấy token từ Render Environment Variables
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-# 2. Khởi tạo Flask App
+# Khởi tạo Web Server
 flask_app = Flask(__name__)
 
+# Khởi tạo Telegram Bot (Phải nằm đây để bên dưới dùng được)
+bot_app = Application.builder().token(BOT_TOKEN).build()
+
+# --- CÁC HÀM XỬ LÝ LỆNH ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🚀 Crypto News AI\n\nBot đã hoạt động thành công!")
+    await update.message.reply_text("🚀 Crypto News AI\n\nBot đã hoạt động thành công trên Render!")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Các lệnh hiện có:\n/start\n/help")
 
-# Thêm handler cho bot
+# Gán hàm xử lý vào bot_app
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(CommandHandler("help", help_command))
 
-# 3. Tạo route Webhook cho Flask
+# --- CẤU HÌNH WEBHOOK CHO RENDER ---
 @flask_app.route('/', methods=['POST', 'GET'])
 async def webhook():
     if request.method == 'POST':
-        # Xử lý tin nhắn đến từ Telegram
+        # Bắt tin nhắn Telegram gửi đến
         update = Update.de_json(request.get_json(force=True), bot_app.bot)
+        # Khởi tạo bot_app nếu chưa được initialize
+        if not bot_app._initialized:
+            await bot_app.initialize()
+            
         await bot_app.process_update(update)
         return "OK", 200
-    return "Bot is running!", 200
+        
+    return "Bot is running 24/7!", 200
 
 if __name__ == "__main__":
-    # 4. Chạy Flask server trên port Render yêu cầu (mặc định 10000)
+    # Chạy trên port của Render
     port = int(os.environ.get("PORT", 10000))
     flask_app.run(host="0.0.0.0", port=port)
